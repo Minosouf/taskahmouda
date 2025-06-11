@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المهام للشركات</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-react/0.263.1/lucide-react.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Tajawal', system-ui, -apple-system, sans-serif !important;
+            direction: rtl;
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 4s infinite;
+        }
+        
+        .gradient-border {
+            position: relative;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            padding: 1px;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4);
+            border-radius: inherit;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .gradient-border:hover::before {
+            opacity: 1;
+        }
+        
+        .task-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .task-card:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        const { 
+            Building2, Users, Calendar, Clock, Star, Filter, 
+            Plus, MoreVertical, CheckCircle, AlertCircle, 
+            User, Settings, Bell, Search, ArrowRight,
+            Briefcase, Target, TrendingUp, Award
+        } = lucide;
+
+        function TaskManager() {
+            const [currentUser] = useState({
+                name: 'أحمد محمد',
+                role: 'مدير المشروع',
+                avatar: '👨‍💼',
+                permissions: ['create', 'edit', 'delete', 'assign']
+            });
+
+            const [companies] = useState([
+                { id: 1, name: 'الشركة الرئيسية', color: 'from-blue-500 to-purple-600' },
+                { id: 2, name: 'شركة التطوير', color: 'from-green-500 to-teal-600' },
+                { id: 3, name: 'الشركة التجارية', color: 'from-orange-500 to-red-600' }
+            ]);
+
+            const [selectedCompany, setSelectedCompany] = useState(1);
+            const [filter, setFilter] = useState('all');
+
+            const [tasks, setTasks] = useState([
+                {
+                    id: 1,
+                    title: 'تطوير نظام إدارة العملاء',
+                    description: 'إنشاء نظام CRM متكامل للشركة مع واجهات حديثة وميزات متقدمة',
+                    status: 'todo',
+                    priority: 'high',
+                    assignee: 'سارة أحمد',
+                    company: 1,
+                    dueDate: '2025-06-15',
+                    tags: ['تطوير', 'أولوية عالية', 'CRM']
+                },
+                {
+                    id: 2,
+                    title: 'مراجعة التقارير المالية',
+                    description: 'مراجعة التقارير الشهرية والتحليل المالي وإعداد التوصيات',
+                    status: 'in-progress',
+                    priority: 'medium',
+                    assignee: 'محمد علي',
+                    company: 1,
+                    dueDate: '2025-06-12',
+                    tags: ['محاسبة', 'تقارير', 'تحليل']
+                },
+                {
+                    id: 3,
+                    title: 'تحديث موقع الشركة',
+                    description: 'تحديث المحتوى وتحسين تجربة المستخدم وإضافة ميزات جديدة',
+                    status: 'done',
+                    priority: 'low',
+                    assignee: 'فاطمة محمود',
+                    company: 2,
+                    dueDate: '2025-06-10',
+                    tags: ['تصميم', 'ويب', 'UX']
+                },
+                {
+                    id: 4,
+                    title: 'إعداد استراتيجية التسويق',
+                    description: 'وضع خطة تسويقية شاملة للربع القادم مع تحديد الأهداف والميزانية',
+                    status: 'todo',
+                    priority: 'high',
+                    assignee: 'عمر حسن',
+                    company: 3,
+                    dueDate: '2025-06-20',
+                    tags: ['تسويق', 'استراتيجية', 'خطة']
+                },
+                {
+                    id: 5,
+                    title: 'تدريب الموظفين الجدد',
+                    description: 'برنامج تدريبي شامل للموظفين الجدد على أنظمة الشركة',
+                    status: 'in-progress',
+                    priority: 'medium',
+                    assignee: 'ليلى كمال',
+                    company: 1,
+                    dueDate: '2025-06-18',
+                    tags: ['تدريب', 'موارد بشرية']
+                }
+            ]);
+
+            const [draggedTask, setDraggedTask] = useState(null);
+            const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+            const [newTask, setNewTask] = useState({
+                title: '',
+                description: '',
+                priority: 'medium',
+                assignee: '',
+                dueDate: ''
+            });
+
+            const columns = [
+                { id: 'todo', title: 'المهام الجديدة', icon: Plus, gradient: 'from-blue-500 to-indigo-600' },
+                { id: 'in-progress', title: 'قيد التنفيذ', icon: Clock, gradient: 'from-yellow-500 to-orange-600' },
+                { id: 'done', title: 'مكتملة', icon: CheckCircle, gradient: 'from-green-500 to-emerald-600' }
+            ];
+
+            const priorities = {
+                high: { label: 'عالية', color: 'bg-red-500/20 text-red-300 border-red-500/30', icon: '🔥' },
+                medium: { label: 'متوسطة', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', icon: '⚡' },
+                low: { label: 'منخفضة', color: 'bg-green-500/20 text-green-300 border-green-500/30', icon: '📝' }
+            };
+
+            const handleDragStart = (e, task) => {
+                setDraggedTask(task);
+                e.dataTransfer.effectAllowed = 'move';
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            };
+
+            const handleDrop = (e, newStatus) => {
+                e.preventDefault();
+                if (draggedTask && currentUser.permissions.includes('edit')) {
+                    setTasks(tasks.map(task => 
+                        task.id === draggedTask.id 
+                            ? { ...task, status: newStatus }
+                            : task
+                    ));
+                }
+                setDraggedTask(null);
+            };
+
+            const handleAddTask = () => {
+                if (newTask.title.trim()) {
+                    const task = {
+                        id: Date.now(),
+                        ...newTask,
+                        status: 'todo',
+                        company: selectedCompany,
+                        tags: ['جديد']
+                    };
+                    setTasks([...tasks, task]);
+                    setNewTask({ title: '', description: '', priority: 'medium', assignee: '', dueDate: '' });
+                    setShowNewTaskForm(false);
+                }
+            };
+
+            const filteredTasks = tasks.filter(task => {
+                if (filter === 'my-tasks') return task.assignee === currentUser.name;
+                if (filter === 'high-priority') return task.priority === 'high';
+                if (selectedCompany !== 'all' && selectedCompany !== 1) return task.company === selectedCompany;
+                return true;
+            });
+
+            const getTasksByStatus = (status) => {
+                return filteredTasks.filter(task => task.status === status);
+            };
+
+            const TaskCard = ({ task }) => (
+                <div
+                    draggable={currentUser.permissions.includes('edit')}
+                    onDragStart={(e) => handleDragStart(e, task)}
+                    className="task-card group relative bg-white/10 glass-effect border border-white/20 rounded-2xl p-5 shadow-2xl hover:shadow-3xl cursor-move hover:bg-white/15"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl"></div>
+                    
+                    <div className="relative z-10">
+                        <div className="flex items-start justify-between mb-4">
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-sm ${priorities[task.priority].color}`}>
+                                <span className="mr-1">{priorities[task.priority].icon}</span>
+                                {priorities[task.priority].label}
+                            </span>
+                            {currentUser.permissions.includes('edit') && (
+                                <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded-lg">
+                                    <MoreVertical className="w-4 h-4 text-white/70 hover:text-white" />
+                                </button>
+                            )}
+                        </div>
+
+                        <h3 className="font-bold text-white mb-3 text-base leading-relaxed text-shadow">
+                            {task.title}
+                        </h3>
+                        
+                        <p className="text-white/80 text-sm mb-4 leading-relaxed">
+                            {task.description}
+                        </p>
+
+                        <div className="flex items-center justify-between text-sm mb-4">
+                            <div className="flex items-center text-white/70">
+                                <User className="w-4 h-4 ml-2" />
+                                <span>{task.assignee}</span>
+                            </div>
+                            <div className="flex items-center text-white/70">
+                                <Calendar className="w-4 h-4 ml-1" />
+                                <span>{task.dueDate}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                            {task.tags.map((tag, index) => (
+                                <span key={index} className="px-2 py-1 bg-white/10 text-white/80 rounded-lg text-xs font-medium backdrop-blur-sm border border-white/10">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen p-4 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                    {/* Header */}
+                    <div className="glass-effect bg-white/10 border border-white/20 rounded-3xl p-8 mb-8 shadow-2xl animate-float">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-6">
+                                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-2xl shadow-2xl glow-effect animate-pulse-slow">
+                                    <Building2 className="w-8 h-8 text-white" />
+                                </div>
+                                <div>
+                                    <h1 className="text-4xl font-black text-white mb-2 text-shadow">نظام إدارة المهام</h1>
+                                    <p className="text-blue-200 text-lg">إدارة مهام الشركات بكفاءة عالية وتقنيات حديثة</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-6">
+                                <button className="glass-effect bg-white/10 border border-white/20 rounded-xl p-3 text-white hover:bg-white/20 transition-all hover:scale-110">
+                                    <Bell className="w-6 h-6" />
+                                </button>
+                                <button className="glass-effect bg-white/10 border border-white/20 rounded-xl p-3 text-white hover:bg-white/20 transition-all hover:scale-110">
+                                    <Settings className="w-6 h-6" />
+                                </button>
+                                <div className="flex items-center space-x-4 glass-effect bg-white/10 border border-white/20 rounded-2xl p-3 hover:bg-white/15 transition-all">
+                                    <span className="text-3xl animate-pulse">{currentUser.avatar}</span>
+                                    <div>
+                                        <div className="text-white font-bold text-lg">{currentUser.name}</div>
+                                        <div className="text-blue-200 text-sm">{currentUser.role}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-6">
+                                <select 
+                                    value={selectedCompany}
+                                    onChange={(e) => setSelectedCompany(Number(e.target.value))}
+                                    className="glass-effect bg-white/10 border border-white/20 rounded-xl px-6 py-3 text-white text-base font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 hover:bg-white/15 transition-all"
+                                >
+                                    <option value="all" className="text-gray-800">جميع الشركات</option>
+                                    {companies.map(company => (
+                                        <option key={company.id} value={company.id} className="text-gray-800">
+                                            {company.name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <div className="flex glass-effect bg-white/10 border border-white/20 rounded-xl overflow-hidden">
+                                    {[
+                                        { id: 'all', label: 'الكل', icon: Target },
+                                        { id: 'my-tasks', label: 'مهامي', icon: User },
+                                        { id: 'high-priority', label: 'أولوية عالية', icon: Star }
+                                    ].map(filterOption => (
+                                        <button
+                                            key={filterOption.id}
+                                            onClick={() => setFilter(filterOption.id)}
+                                            className={`px-6 py-3 text-base font-medium flex items-center space-x-3 transition-all ${
+                                                filter === filterOption.id 
+                                                    ? 'bg-white/20 text-white shadow-lg' 
+                                                    : 'text-blue-200 hover:bg-white/10'
+                                            }`}
+                                        >
+                                            <filterOption.icon className="w-5 h-5" />
+                                            <span>{filterOption.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {currentUser.permissions.includes('create') && (
+                                <button 
+                                    onClick={() => setShowNewTaskForm(true)}
+                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center space-x-3 hover:scale-105 glow-effect"
+                                >
+                                    <Plus className="w-6 h-6" />
+                                    <span className="text-lg">مهمة جديدة</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                        {[
+                            { title: 'إجمالي المهام', value: tasks.length, icon: Briefcase, gradient: 'from-blue-500 to-blue-700' },
+                            { title: 'قيد التنفيذ', value: getTasksByStatus('in-progress').length, icon: Clock, gradient: 'from-yellow-500 to-orange-600' },
+                            { title: 'مكتملة', value: getTasksByStatus('done').length, icon: CheckCircle, gradient: 'from-green-500 to-emerald-600' },
+                            { title: 'أولوية عالية', value: tasks.filter(t => t.priority === 'high').length, icon: AlertCircle, gradient: 'from-red-500 to-pink-600' }
+                        ].map((stat, index) => (
+                            <div key={index} className="glass-effect bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 gradient-border">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-blue-200 text-lg font-medium mb-2">{stat.title}</p>
+                                        <p className="text-5xl font-black text-white text-shadow">{stat.value}</p>
+                                    </div>
+                                    <div className={`bg-gradient-to-r ${stat.gradient} p-4 rounded-2xl shadow-2xl`}>
+                                        <stat.icon className="w-8 h-8 text-white" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Task Columns */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {columns.map(column => (
+                            <div
+                                key={column.id}
+                                className="glass-effect bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl min-h-[600px]"
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, column.id)}
+                            >
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center space-x-4">
+                                        <div className={`bg-gradient-to-r ${column.gradient} p-3 rounded-xl shadow-lg`}>
+                                            <column.icon className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-white text-shadow">
+                                            {column.title}
+                                        </h2>
+                                        <span className="glass-effect bg-white/20 text-white px-4 py-2 rounded-full text-lg font-bold">
+                                            {getTasksByStatus(column.id).length}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {getTasksByStatus(column.id).map(task => (
+                                        <TaskCard key={task.id} task={task} />
+                                    ))}
+                                    
+                                    {getTasksByStatus(column.id).length === 0 && (
+                                        <div className="text-center py-16 text-white/50">
+                                            <div className="w-20 h-20 glass-effect bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
+                                                <column.icon className="w-10 h-10" />
+                                            </div>
+                                            <p className="text-xl font-medium">لا توجد مهام في هذه المرحلة</p>
+                                            <p className="text-lg mt-2">اسحب المهام هنا لتغيير حالتها</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* New Task Form Modal */}
+                    {showNewTaskForm && (
+                        <div className="fixed inset-0 bg-black/70 glass-effect flex items-center justify-center p-4 z-50">
+                            <div className="glass-effect bg-white/10 border border-white/20 rounded-3xl p-10 max-w-lg w-full shadow-2xl">
+                                <h3 className="text-3xl font-bold text-white mb-8 text-center text-shadow">
+                                    إضافة مهمة جديدة
+                                </h3>
+                                <div className="space-y-6">
+                                    <input
+                                        type="text"
+                                        placeholder="عنوان المهمة"
+                                        value={newTask.title}
+                                        onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                                        className="w-full glass-effect bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
+                                    />
+                                    <textarea
+                                        placeholder="وصف المهمة"
+                                        rows="4"
+                                        value={newTask.description}
+                                        onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                                        className="w-full glass-effect bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none text-lg"
+                                    ></textarea>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <select
+                                            value={newTask.priority}
+                                            onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
+                                            className="glass-effect bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
+                                        >
+                                            <option value="high" className="text-gray-800">عالية</option>
+                                            <option value="medium" className="text-gray-800">متوسطة</option>
+                                            <option value="low" className="text-gray-800">منخفضة</option>
+                                        </select>
+                                        <input
+                                            type="date"
+                                            value={newTask.dueDate}
+                                            onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+                                            className="glass-effect bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
+                                        />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="المسؤول عن المهمة"
+                                        value={newTask.assignee}
+                                        onChange={(e) => setNewTask({...newTask, assignee: e.target.value})}
+                                        className="w-full glass-effect bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
+                                    />
+                                    <div className="flex space-x-4">
+                                        <button
+                                            onClick={() => setShowNewTaskForm(false)}
+                                            className="flex-1 glass-effect bg-white/10 border border-white/20 text-white px-6 py-4 rounded-xl hover:bg-white/20 transition-all text-lg font-bold"
+                                        >
+                                            إلغاء
+                                        </button>
+                                        <button
+                                            onClick={handleAddTask}
+                                            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-xl hover:shadow-2xl transition-all text-lg font-bold hover:scale-105"
+                                        >
+                                            إضافة المهمة
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<TaskManager />, document.getElementById('root'));
+    </script>
+</body>
+</html>
